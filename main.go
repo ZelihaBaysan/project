@@ -40,14 +40,14 @@ func NewTarget(domain string, numWorkers int) (*Target, error) {
 		ResultChannel: make(chan int, len(ports)),
 		OpenPorts:     make(chan adds.ServiceVersion, len(ports)),
 		OpenPortsUDP:  make(chan adds.ServiceVersion, len(ports)),
-		Done:          make(chan bool, numWorkers*2), // Adjusted for TCP and UDP workers
-		Services:      make(map[int]string),          // Add services map if needed
+		Done:          make(chan bool, numWorkers*2),
+		Services:      make(map[int]string),
 	}, nil
 }
 
 func (t *Target) Scan() {
 	for i := 0; i < t.NumWorkers; i++ {
-		go adds.Worker("", t.PortChannel, t.ResultChannel, t.OpenPorts, t.Done, t.Services)
+		go adds.WorkerTCP("", t.PortChannel, t.ResultChannel, t.OpenPorts, t.Done, t.Services)
 		go adds.WorkerUDP("", t.PortChannel, t.ResultChannel, t.OpenPortsUDP, t.Done, t.Services)
 	}
 
@@ -55,7 +55,7 @@ func (t *Target) Scan() {
 		fmt.Printf("Scanning IP: %s\n", ip)
 
 		for _, port := range t.Ports {
-			fmt.Printf("Enqueueing port %d\n", port) // Debug: Hangi portların tarandığını yazdır
+			fmt.Printf("Enqueueing port %d\n", port)
 			t.PortChannel <- port
 		}
 		close(t.PortChannel)

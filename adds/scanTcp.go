@@ -9,7 +9,7 @@ import (
 func ScanPort(ip string, port int) string {
 	address := fmt.Sprintf("%s:%d", ip, port)
 
-	timeout := 10 * time.Second // Timeout süresini artırdık
+	timeout := 10 * time.Second
 	conn, err := net.DialTimeout("tcp", address, timeout)
 	if err != nil {
 		if _, ok := err.(*net.OpError); ok {
@@ -21,7 +21,7 @@ func ScanPort(ip string, port int) string {
 	return Open
 }
 
-func Worker(ip string, ports, results chan int, openPorts chan ServiceVersion, done chan bool, services map[int]string) {
+func WorkerTCP(ip string, ports, results chan int, openPorts chan ServiceVersion, done chan bool, services map[int]string) {
 	for port := range ports {
 		state := ScanPort(ip, port)
 		service := DetectService(port, services)
