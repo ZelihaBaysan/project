@@ -6,9 +6,8 @@ import (
 	"time"
 )
 
-func ScanPort(ip string, port int) string {
+func ScanPortTCP(ip string, port int) string {
 	address := fmt.Sprintf("%s:%d", ip, port)
-
 	timeout := 10 * time.Second
 	conn, err := net.DialTimeout("tcp", address, timeout)
 	if err != nil {
@@ -23,7 +22,7 @@ func ScanPort(ip string, port int) string {
 
 func WorkerTCP(ip string, ports, results chan int, openPorts chan ServiceVersion, done chan bool, services map[int]string) {
 	for port := range ports {
-		state := ScanPort(ip, port)
+		state := ScanPortTCP(ip, port)
 		service := DetectService(port, services)
 		results <- port
 		if state == Open {
