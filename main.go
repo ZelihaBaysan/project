@@ -7,6 +7,19 @@ import (
 	"port/adds"
 )
 
+// PortScanner defines a structure for scanning ports on a domain.
+//
+// Fields:
+// - Domain: The domain to be scanned.
+// - IPs: A slice of IP addresses associated with the domain.
+// - Ports: A slice of ports to be scanned.
+// - NumWorkers: The number of worker goroutines to use for scanning.
+// - PortChannel: A channel used to distribute ports to be scanned by workers.
+// - ResultChannel: A channel used to collect scan results from workers.
+// - OpenPorts: A channel to collect open TCP ports and their detected services.
+// - OpenPortsUDP: A channel to collect open UDP ports and their detected services.
+// - Done: A channel to signal the completion of worker tasks.
+// - Services: A map of known services with port numbers as keys and service names as values.
 type PortScanner struct {
 	Domain        string
 	IPs           []string
@@ -20,6 +33,18 @@ type PortScanner struct {
 	Services      map[int]string
 }
 
+// NewTarget creates a new PortScanner instance for a given domain.
+//
+// Parameters:
+// - domain: The domain to be scanned.
+// - numWorkers: The number of worker goroutines to use for scanning.
+//
+// Returns:
+// - *PortScanner: A pointer to the created PortScanner instance.
+// - error: An error if domain resolution fails.
+//
+// This function resolves the given domain to its associated IP addresses and
+// prepares a list of ports from 1 to 65535 to be scanned.
 func NewTarget(domain string, numWorkers int) (*PortScanner, error) {
 	ips, err := net.LookupHost(domain)
 	if err != nil {
@@ -45,6 +70,12 @@ func NewTarget(domain string, numWorkers int) (*PortScanner, error) {
 	}, nil
 }
 
+// Scan performs the port scanning operation on the resolved IP addresses.
+//
+// The function starts the specified number of worker goroutines for both TCP and UDP scanning,
+// distributes the ports to be scanned through channels, and writes the results to an output file.
+//
+// The results include the status of each port (open or closed) and the detected services running on open ports.
 func (t *PortScanner) Scan() {
 	for i := 0; i < t.NumWorkers; i++ {
 		go adds.WorkerTCP("", t.PortChannel, t.ResultChannel, t.OpenPorts, t.Done, t.Services)
@@ -105,6 +136,10 @@ func (t *PortScanner) Scan() {
 	}
 }
 
+// main is the entry point of the application.
+//
+// It prompts the user for a domain name, creates a PortScanner instance,
+// and initiates the port scanning process.
 func main() {
 	var domain string
 	fmt.Print("Enter domain: ")
