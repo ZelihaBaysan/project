@@ -77,61 +77,66 @@ func NewTarget(domain string, numWorkers int) (*PortScanner, error) {
 //
 // The results include the status of each port (open or closed) and the detected services running on open ports.
 func (t *PortScanner) Scan() {
+	// Start worker goroutines
 	for i := 0; i < t.NumWorkers; i++ {
 		go adds.WorkerTCP("", t.PortChannel, t.ResultChannel, t.OpenPorts, t.Done, t.Services)
 		go adds.WorkerUDP("", t.PortChannel, t.ResultChannel, t.OpenPortsUDP, t.Done, t.Services)
 	}
 
-	for _, ip := range t.IPs {
-		fmt.Printf("Scanning IP: %s\n", ip)
+	// Enqueue all ports
+	for _, port := range t.Ports {
+		fmt.Printf("Enqueueing port %d\n", port)
+		t.PortChannel <- port
+	}
+	close(t.PortChannel) // Close the port channel after enqueueing all ports
 
-		for _, port := range t.Ports {
-			fmt.Printf("Enqueueing port %d\n", port)
-			t.PortChannel <- port
-		}
-		close(t.PortChannel)
+	// Wait for results
+	for range t.Ports {
+		<-t.ResultChannel
+	}
 
-		for range t.Ports {
-			<-t.ResultChannel
-		}
+	// Wait for all workers to finish
+	doneCount := 0
+	for doneCount < t.NumWorkers*2 {
+		<-t.Done
+		doneCount++
+	}
 
-		for i := 0; i < t.NumWorkers*2; i++ {
-			<-t.Done
-		}
-		close(t.OpenPorts)
-		close(t.OpenPortsUDP)
+	// Close the result channels
+	close(t.OpenPorts)
+	close(t.OpenPortsUDP)
 
-		file, err := os.Create("output.txt")
-		if err != nil {
-			fmt.Printf("Error creating file: %s\n", err)
-			return
-		}
-		defer file.Close()
+	// Write results to file
+	file, err := os.Create("output.txt")
+	if err != nil {
+		fmt.Printf("Error creating file: %s\n", err)
+		return
+	}
+	defer file.Close()
 
-		_, err = file.WriteString("Open TCP Ports with Services:\n")
-		if err != nil {
-			fmt.Printf("Error writing to file: %s\n", err)
-			return
-		}
-		for service := range t.OpenPorts {
-			_, err = file.WriteString(fmt.Sprintf("Port %d (TCP) is Open, Service: %s\n", service.Port, service.Service))
-			if err != nil {
-				fmt.Printf("Error writing to file: %s\n", err)
-				return
-			}
-		}
-
-		_, err = file.WriteString("Open UDP Ports with Services:\n")
+	_, err = file.WriteString("Open TCP Ports with Services:\n")
+	if err != nil {
+		fmt.Printf("Error writing to file: %s\n", err)
+		return
+	}
+	for service := range t.OpenPorts {
+		_, err = file.WriteString(fmt.Sprintf("Port %d (TCP) is Open, Service: %s\n", service.Port, service.Service))
 		if err != nil {
 			fmt.Printf("Error writing to file: %s\n", err)
 			return
 		}
-		for service := range t.OpenPortsUDP {
-			_, err = file.WriteString(fmt.Sprintf("Port %d (UDP) is Open, Service: %s\n", service.Port, service.Service))
-			if err != nil {
-				fmt.Printf("Error writing to file: %s\n", err)
-				return
-			}
+	}
+
+	_, err = file.WriteString("Open UDP Ports with Services:\n")
+	if err != nil {
+		fmt.Printf("Error writing to file: %s\n", err)
+		return
+	}
+	for service := range t.OpenPortsUDP {
+		_, err = file.WriteString(fmt.Sprintf("Port %d (UDP) is Open, Service: %s\n", service.Port, service.Service))
+		if err != nil {
+			fmt.Printf("Error writing to file: %s\n", err)
+			return
 		}
 	}
 }
