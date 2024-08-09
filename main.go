@@ -72,10 +72,21 @@ func NewTarget(domain string, numWorkers int) (*PortScanner, error) {
 
 // Scan performs the port scanning operation on the resolved IP addresses.
 //
-// The function starts the specified number of worker goroutines for both TCP and UDP scanning,
-// distributes the ports to be scanned through channels, and writes the results to an output file.
+// The function starts the specified number of worker goroutines for both TCP and UDP scanning.
+// It distributes the ports to be scanned through channels and waits for all results to be collected.
+// Once all results are gathered, it closes the result channels and writes the results to an output file.
 //
-// The results include the status of each port (open or closed) and the detected services running on open ports.
+// The results include:
+// - Status of each TCP port (open or closed) and the detected services running on open TCP ports.
+// - Status of each UDP port (open or closed) and the detected services running on open UDP ports.
+//
+// Detailed Steps:
+// 1. Starts `NumWorkers` number of worker goroutines for TCP and UDP scanning.
+// 2. Enqueues all ports to the `PortChannel` and then closes the `PortChannel`.
+// 3. Waits for all results to be processed by reading from `ResultChannel`.
+// 4. Waits for all worker goroutines to finish by receiving signals from the `Done` channel.
+// 5. Closes the `OpenPorts` and `OpenPortsUDP` channels after all results are processed.
+// 6. Writes the open TCP and UDP port results to "output.txt", including the port number and associated service details.
 func (t *PortScanner) Scan() {
 	// Start worker goroutines
 	for i := 0; i < t.NumWorkers; i++ {
