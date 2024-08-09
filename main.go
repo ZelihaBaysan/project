@@ -7,7 +7,7 @@ import (
 	"port/adds"
 )
 
-type Target struct {
+type PortScanner struct {
 	Domain        string
 	IPs           []string
 	Ports         []int
@@ -20,7 +20,7 @@ type Target struct {
 	Services      map[int]string
 }
 
-func NewTarget(domain string, numWorkers int) (*Target, error) {
+func NewTarget(domain string, numWorkers int) (*PortScanner, error) {
 	ips, err := net.LookupHost(domain)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func NewTarget(domain string, numWorkers int) (*Target, error) {
 		ports = append(ports, port)
 	}
 
-	return &Target{
+	return &PortScanner{
 		Domain:        domain,
 		IPs:           ips,
 		Ports:         ports,
@@ -45,7 +45,7 @@ func NewTarget(domain string, numWorkers int) (*Target, error) {
 	}, nil
 }
 
-func (t *Target) Scan() {
+func (t *PortScanner) Scan() {
 	for i := 0; i < t.NumWorkers; i++ {
 		go adds.WorkerTCP("", t.PortChannel, t.ResultChannel, t.OpenPorts, t.Done, t.Services)
 		go adds.WorkerUDP("", t.PortChannel, t.ResultChannel, t.OpenPortsUDP, t.Done, t.Services)
