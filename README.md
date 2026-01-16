@@ -1,44 +1,70 @@
-# 🔍 Port Scanner
+# Port Scanner
 
-Bu proje, Python'un yerleşik `socket` kütüphanesini kullanarak hedef IP veya alan adı üzerindeki açık portları tespit eden basit ve etkili bir ağ tarama aracıdır.
+A lightweight **network port scanner** written in **Go (Golang)** that checks for open TCP ports on a given host or IP address. It is designed to be simple, dependency-free, and easy to use for basic network discovery and security assessment tasks.
 
-Herhangi bir harici kütüphane kurulumu gerektirmez, Python yüklü olan her makinede çalışır.
+## ⚡ Features
 
-## 🚀 Özellikler
+* 🚀 Fast and lightweight — implemented with Go’s standard library
+* 🔍 Scans a range of TCP ports for open/closed status
+* 📌 No external dependencies required
+* 📦 Cross-platform support (Linux, macOS, Windows)
+* 💻 Easy to use from the command line
 
-* **Hızlı ve Hafif:** Ekstra kurulum gerektirmez.
-* **IP ve Hostname Desteği:** Hem IP adresi hem de alan adı girerek tarama yapabilirsiniz.
-* **Açık Port Tespiti:** Hedef sistemde bağlantıya açık olan portları listeler.
+## 🧠 How It Works
 
-## 🛠️ Kullanılan Teknolojiler
+This tool attempts to establish a TCP connection to each specified port on a target host. If the connection succeeds, the port is considered *open*. If it fails or times out, the port is considered *closed*.
 
-* **Python 3**
-* **Socket** (Python Standart Kütüphanesi)
+## 📥 Installation
 
-## 💻 Kullanım
+**Prerequisites:**
+✔ Go installed (version 1.18+ recommended)
 
-Projeyi bilgisayarınıza indirin ve terminalde çalıştırın:
+Clone the repository and build:
 
 ```bash
-git clone [https://github.com/ZelihaBaysan/port-scanner.git](https://github.com/ZelihaBaysan/port-scanner.git)
+git clone https://github.com/ZelihaBaysan/port-scanner.git
 cd port-scanner
-python port_scanner.py
-
+go build -o port-scanner
 ```
 
-Program çalıştığında hedef IP adresini veya alan adını girmeniz yeterlidir.
+> This produces a binary named `port-scanner` that you can run from your terminal.
 
-**Örnek:**
-
-```text
-Hedef IP girin: google.com
-...Tarama sonuçları listelenir...
+## ▶️ Usage
 
 ```
-
-## ⚠️ Yasal Uyarı
-
-Bu araç siber güvenlik eğitimi ve ağ analizi amacıyla geliştirilmiştir. İzniniz olmayan ağlarda tarama yapmak yasalara aykırı olabilir.
-
-
+./port-scanner <target> [startPort] [endPort]
 ```
+
+### Examples
+
+🔎 Scan the most common ports (1–1024):
+
+```bash
+./port-scanner scanme.sh 1 1024
+```
+
+📍 Scan a specific port:
+
+```bash
+./port-scanner 192.168.1.1 80 80
+```
+
+👉 If no port range is provided, a default range (e.g., 1–1024) may be used depending on implementation.
+
+## 🛠️ Command-Line Parameters
+
+| Parameter   | Description                  |
+| ----------- | ---------------------------- |
+| `target`    | Hostname or IP to scan       |
+| `startPort` | First TCP port in scan range |
+| `endPort`   | Last TCP port in scan range  |
+
+## ⚠️ Legal and Ethical Notice
+
+Port scanning can be intrusive. Scan only hosts and networks you have permission to test. Unauthorized scanning may be illegal in some jurisdictions.
+
+## 🧾 License
+
+This project is released under the **MIT License** — feel free to use and modify it responsibly.
+
+ner "GitHub - ZelihaBaysan/port-scanner"
